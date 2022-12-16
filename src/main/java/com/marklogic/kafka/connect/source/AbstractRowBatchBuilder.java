@@ -27,7 +27,7 @@ public class AbstractRowBatchBuilder extends LoggingObject {
         logger.error("Failed to create or add SourceRecord from result row: " + record + "\n cause: " + ex.getMessage());
     }
 
-    void logBatchError(Exception ex) {
+    void logBatchError(Throwable ex) {
         logger.error("Failed to create or add SourceRecord from result row, cause: " + ex.getMessage());
     }
 
