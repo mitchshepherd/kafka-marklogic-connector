@@ -43,6 +43,8 @@ dependencies {
 
   implementation "com.marklogic:marklogic-client-api:5.5.4"
 
+  implementation 'org.jdom:jdom2:2.0.6.1'
+
   implementation("com.marklogic:marklogic-data-hub:5.7.2") {
     // Excluding these because there's no need for them
     exclude module: "spring-boot-autoconfigure"

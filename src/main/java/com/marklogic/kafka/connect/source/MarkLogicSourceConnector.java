@@ -46,6 +46,7 @@ public class MarkLogicSourceConnector extends SourceConnector {
     @Override
     public void stop() {
         logger.info("Stopping MarkLogicSourceConnector");
+        RowBatcherSourceTask.CONNECTOR_WAS_STOPPED = true;
     }
 
     @Override

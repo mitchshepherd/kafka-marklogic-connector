@@ -18,6 +18,8 @@ import java.util.*;
  */
 public class RowBatcherSourceTask extends SourceTask {
 
+    public static Boolean CONNECTOR_WAS_STOPPED = false;
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private DatabaseClient databaseClient;
@@ -25,6 +27,7 @@ public class RowBatcherSourceTask extends SourceTask {
     private RowBatcher<?> rowBatcher = null;
     private long pollDelayMs = 1000L;
     private RowBatcherBuilder<?> rowBatcherBuilder;
+    private Map<String, Object> parsedConfig;
 
     /**
      * Required for a Kafka task.
@@ -44,24 +47,29 @@ public class RowBatcherSourceTask extends SourceTask {
     @Override
     public final void start(Map<String, String> config) {
         logger.info("Starting RowBatcherSourceTask");
-        Map<String, Object> parsedConfig = MarkLogicSourceConfig.CONFIG_DEF.parse(config);
+        this.parsedConfig = MarkLogicSourceConfig.CONFIG_DEF.parse(config);
         DatabaseClientConfig databaseClientConfig = new DefaultDatabaseClientConfigBuilder().buildDatabaseClientConfig(parsedConfig);
         this.databaseClient = new DefaultConfiguredDatabaseClientFactory().newDatabaseClient(databaseClientConfig);
         dataMovementManager = databaseClient.newDataMovementManager();
         pollDelayMs = (Long) parsedConfig.get(MarkLogicSourceConfig.WAIT_TIME);
-
-        rowBatcherBuilder = newRowBatcherBuilder(dataMovementManager, parsedConfig);
-        logger.info("Started RowBatcherSourceTask");
+        logger.info("Finished start");
     }
 
     @Override
     public List<SourceRecord> poll() throws InterruptedException {
-        // Temporary logging while testing CP to ensure the correct output format is being used
-        logger.info("Polling; RowBatcherBuilder: " + rowBatcherBuilder.getClass().getName());
+        logger.info("POLLING!");
+        rowBatcherBuilder = newRowBatcherBuilder(dataMovementManager, parsedConfig);
+        logger.info("RBB: " + rowBatcherBuilder);
 
         List<SourceRecord> newSourceRecords = new Vector<>();
         logger.info("Temporary log statement for testing; sleeping for " + pollDelayMs + "ms");
         Thread.sleep(pollDelayMs);
+
+        if (CONNECTOR_WAS_STOPPED) {
+            logger.info("CONNECTED WAS STOPPED, so returning null from poll()");
+            CONNECTOR_WAS_STOPPED = false;
+            return null;
+        }
 
         long start = System.currentTimeMillis();
         try {
@@ -73,8 +81,11 @@ public class RowBatcherSourceTask extends SourceTask {
             return null;
         }
 
+        logger.info("Estimate of matching rows: " + rowBatcher.getRowEstimate());
+        logger.info("RowBatcherBuilder: " + rowBatcherBuilder);
         performPoll();
-        logger.info("Source record count: " + newSourceRecords.size() + "; duration: " + (System.currentTimeMillis() - start));
+        logger.info("DURATION: " + (System.currentTimeMillis() - start));
+        logger.info("Source record count: " + newSourceRecords.size());
         return newSourceRecords.isEmpty() ? null : newSourceRecords;
     }
 
@@ -120,7 +131,7 @@ public class RowBatcherSourceTask extends SourceTask {
     // indefinitely, so they need to be stopped with a call from a different thread in the Worker."
     @Override
     public synchronized void stop() {
-        logger.info("Stop called; stopping job");
+        logger.info("Stop called, so stopping job");
         if (rowBatcher != null) {
             dataMovementManager.stopJob(rowBatcher);
         }

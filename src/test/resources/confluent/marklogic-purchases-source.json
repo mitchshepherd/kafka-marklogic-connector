@@ -10,12 +10,12 @@
     "ml.connection.username": "kafka-test-user",
     "ml.connection.password": "kafkatest",
     "ml.connection.securityContextType": "DIGEST",
-    "ml.source.optic.dsl": "op.fromView('demo', 'purchases')",
-    "ml.source.topic": "marklogic-purchases",
+    "ml.source.optic.dsl": "op.fromView('demo', 'employee')",
+    "ml.source.topic": "marklogic-employees",
     "ml.source.waitTime": "5000",
     "ml.source.optic.jobName": "test-job",
-    "ml.source.optic.outputFormat": "JSON",
-    "ml.dmsdk.batchSize": "100000",
+    "ml.source.optic.outputFormat": "XML",
+    "ml.dmsdk.batchSize": "10000",
     "ml.dmsdk.threadCount": "16"
   }
 }
